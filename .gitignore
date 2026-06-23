@@ -1,0 +1,53 @@
+# === Secrets / Keys / Credentials — NIEMALS einchecken ===
+.env
+.env.*
+*.env
+**/credentials.json
+**/secrets/
+secrets.*
+*.secret
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+id_rsa*
+application-secrets*.yml
+application-secrets*.yaml
+application-secrets*.properties
+application-local*.yml
+application-local*.yaml
+application-local*.properties
+.oa-shell/
+
+# === Java / Maven ===
+target/
+*.class
+*.jar
+*.war
+!.mvn/wrapper/maven-wrapper.jar
+.mvn/timing.properties
+
+# === Node ===
+node_modules/
+dist/
+build/
+npm-debug.log*
+yarn-error.log*
+*.tsbuildinfo
+
+# === IDE ===
+.idea/
+*.iml
+.vscode/
+*.code-workspace
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Logs / temp ===
+*.log
+logs/
+tmp/

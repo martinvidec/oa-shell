@@ -63,6 +63,9 @@ Serverseitiges Session-Hosting wurde bewusst verworfen – nicht wieder einführ
 - **Es gibt noch nichts zu bauen/testen.** Sobald das Scaffolding (Issues #2/#3) steht:
   App über **Maven** (`mvn verify` etc.), Channel über **npm**. Bis dahin existieren
   keine Build-/Test-Befehle.
+- **JDK 21 ist via Homebrew verfügbar** (`openjdk@21`). Falls die Standard-`java`
+  älter ist, für den Build darauf zeigen, z. B.
+  `JAVA_HOME="$(brew --prefix openjdk@21)" mvn verify` (oder `openjdk@21/bin` in den PATH).
 - **Channel starten (Nutzer-Seite, gemäß Spec):** einmal `oa-shell login`, dann
   `claude --dangerously-load-development-channels server:oa-shell` im Zielverzeichnis.
   (Eigene Channels sind in der Preview nicht allowlisted → Development-Flag nötig.)

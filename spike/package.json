@@ -1,0 +1,16 @@
+{
+  "name": "oashell-spike",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Spike (Issue #1): minimaler oa-shell-Channel + Stub-Server zum Validieren des Channel↔App-Durchstichs",
+  "scripts": {
+    "stub": "node stub-server.mjs",
+    "test:bridge": "node test-bridge.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "ws": "^8.18.0",
+    "zod": "^4.4.3"
+  }
+}

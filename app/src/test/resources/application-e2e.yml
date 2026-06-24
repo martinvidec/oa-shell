@@ -1,0 +1,6 @@
+# E2E-Profil: aktiviert das Dev-Login (E2eLoginController) und dämpft das Logging.
+# Datasource/H2 und Google-Dummy-Credentials kommen aus application.yml.
+logging:
+  level:
+    com.microsoft.playwright: WARN
+    org.springframework.web.socket: WARN

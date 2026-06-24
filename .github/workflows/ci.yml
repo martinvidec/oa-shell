@@ -18,8 +18,20 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - name: Build & test
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}
+      - name: Build & test (incl. E2E)
         run: mvn -B -ntp verify
+      - name: Upload Playwright traces on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces
+          path: app/target/traces/
+          if-no-files-found: ignore
 
   channel:
     name: Channel (Node)

@@ -87,8 +87,9 @@ public class AuthorizationServerConfig {
         http
                 .authorizeHttpRequests(a -> a
                         // /bridge wird per Bearer-Token im Handshake authentifiziert (s. BridgeTokenHandshakeInterceptor).
+                        // /e2e/** existiert nur unter dem Profil "e2e" (E2eLoginController) – in Produktion 404.
                         .requestMatchers("/", "/error", "/healthz", "/actuator/health",
-                                "/bridge", "/css/**", "/js/**", "/favicon.ico").permitAll()
+                                "/bridge", "/e2e/**", "/css/**", "/js/**", "/favicon.ico").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(o -> o.userInfoEndpoint(u -> u.oidcUserService(oidcUserService)));
         return http.build();

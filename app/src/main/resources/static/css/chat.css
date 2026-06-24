@@ -76,14 +76,21 @@ body {
 .msg--assistant { align-self: flex-start; background: var(--assistant); }
 .msg--error { align-self: center; background: var(--error); color: #ffd7dd; font-size: 13px; }
 
-.msg--permission { align-self: stretch; max-width: none; background: #21262e; border: 1px solid var(--accent); }
-.perm__title { font-weight: 600; margin-bottom: 6px; }
-.perm__desc { color: var(--muted); margin-bottom: 6px; }
-.perm__preview { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin: 0 0 8px; overflow-x: auto; font-size: 12px; }
-.perm__actions { display: flex; gap: 8px; }
-.perm__actions button { border: none; border-radius: 6px; padding: 6px 14px; font-weight: 600; cursor: pointer; background: var(--accent); color: #0b1320; }
-.perm__actions .btn-deny { background: #5b2330; color: #ffd7dd; }
-.perm__result { margin-top: 6px; color: var(--muted); font-size: 13px; }
+.msg--system { align-self: center; background: transparent; color: var(--muted); font-size: 12px; padding: 2px 8px; }
+
+/* Freigabe-Dialog (modal) */
+.modal { position: fixed; inset: 0; background: rgba(0, 0, 0, .55); display: flex; align-items: center; justify-content: center; z-index: 50; }
+.modal__box { background: var(--panel); border: 1px solid var(--accent); border-radius: 12px; padding: 20px; width: min(560px, 92vw); box-shadow: 0 12px 40px rgba(0, 0, 0, .5); }
+.modal__head { font-size: 18px; font-weight: 700; margin-bottom: 12px; }
+.modal__tool { margin-bottom: 8px; }
+.modal__desc { color: var(--muted); margin-bottom: 10px; white-space: pre-wrap; }
+.modal__preview { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px; margin: 0 0 12px; overflow-x: auto; font-size: 12px; max-height: 200px; }
+.modal__reason-label { display: block; color: var(--muted); font-size: 13px; margin-bottom: 4px; }
+.modal__reason { width: 100%; background: var(--panel-2); color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px; font: inherit; resize: vertical; margin-bottom: 14px; }
+.modal__actions { display: flex; gap: 10px; justify-content: flex-end; }
+.modal__actions button { border: none; border-radius: 8px; padding: 9px 18px; font-weight: 600; cursor: pointer; }
+.btn-allow { background: #1f7a4d; color: #eafff3; }
+.btn-deny { background: #5b2330; color: #ffd7dd; }
 
 .working { padding: 4px 16px 8px; color: var(--muted); font-size: 13px; font-style: italic; }
 

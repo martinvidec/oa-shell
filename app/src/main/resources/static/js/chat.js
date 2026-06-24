@@ -94,7 +94,7 @@
         appendMessage('assistant', m.text);
         setWorking(false);
       } else if (m.type === 'permission_request') {
-        appendPermission(m);
+        enqueuePermission(m);
       } else if (m.type === 'error') {
         appendMessage('error', m.message || 'Fehler');
         setWorking(false);
@@ -102,50 +102,54 @@
     };
   }
 
-  // Minimaler Freigabe-Block (der polierte Dialog folgt in #12).
-  function appendPermission(req) {
-    const card = document.createElement('div');
-    card.className = 'msg msg--permission';
-    const title = document.createElement('div');
-    title.className = 'perm__title';
-    title.textContent = 'Claude möchte ' + (req.tool_name || 'ein Tool') + ' ausführen';
-    card.appendChild(title);
-    if (req.description) {
-      const d = document.createElement('div');
-      d.className = 'perm__desc';
-      d.textContent = req.description;
-      card.appendChild(d);
-    }
-    if (req.input_preview) {
-      const pre = document.createElement('pre');
-      pre.className = 'perm__preview';
-      pre.textContent = req.input_preview;
-      card.appendChild(pre);
-    }
-    const actions = document.createElement('div');
-    actions.className = 'perm__actions';
-    const decide = (behavior) => {
-      if (ws && ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({ type: 'permissionVerdict', request_id: req.request_id, behavior }));
+  // --- Freigabe-Dialog (Permission-Relay) ---
+  // Mehrere gleichzeitige Anfragen werden nacheinander modal abgearbeitet.
+  const permModal = $('perm-modal');
+  const permQueue = [];
+  let activePerm = null;
+
+  function enqueuePermission(req) {
+    permQueue.push(req);
+    showNextPermission();
+  }
+
+  function showNextPermission() {
+    if (activePerm || permQueue.length === 0 || !permModal) return;
+    activePerm = permQueue.shift();
+    $('perm-tool').textContent = activePerm.tool_name || '?';
+    $('perm-desc').textContent = activePerm.description || '';
+    const pre = $('perm-preview');
+    pre.textContent = activePerm.input_preview || '';
+    pre.hidden = !activePerm.input_preview;
+    $('perm-reason').value = '';
+    permModal.hidden = false;
+    $('perm-allow').focus();
+  }
+
+  function decidePermission(behavior) {
+    const req = activePerm;
+    if (!req) return;
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'permissionVerdict', request_id: req.request_id, behavior }));
+      if (behavior === 'deny') {
+        const reason = $('perm-reason').value.trim();
+        if (reason) {
+          // Begründung als Folge-Nachricht an Claude (FA-23, Soll).
+          ws.send(JSON.stringify({ type: 'chat', sessionId: req.sessionId, text: reason }));
+          appendMessage('user', reason);
+        }
       }
-      actions.remove();
-      const result = document.createElement('div');
-      result.className = 'perm__result';
-      result.textContent = behavior === 'allow' ? '✓ erlaubt' : '✗ abgelehnt';
-      card.appendChild(result);
-    };
-    const allow = document.createElement('button');
-    allow.textContent = 'Erlauben';
-    allow.addEventListener('click', () => decide('allow'));
-    const deny = document.createElement('button');
-    deny.className = 'btn-deny';
-    deny.textContent = 'Ablehnen';
-    deny.addEventListener('click', () => decide('deny'));
-    actions.appendChild(allow);
-    actions.appendChild(deny);
-    card.appendChild(actions);
-    messagesEl.appendChild(card);
-    messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+    appendMessage('system', 'Freigabe für ' + (req.tool_name || 'Tool') + ': '
+      + (behavior === 'allow' ? 'erlaubt' : 'abgelehnt'));
+    permModal.hidden = true;
+    activePerm = null;
+    showNextPermission();
+  }
+
+  if (permModal) {
+    $('perm-allow').addEventListener('click', () => decidePermission('allow'));
+    $('perm-deny').addEventListener('click', () => decidePermission('deny'));
   }
 
   form.addEventListener('submit', (e) => {

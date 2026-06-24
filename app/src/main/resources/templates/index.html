@@ -41,6 +41,23 @@
         <button type="submit">Senden</button>
       </form>
     </section>
+
+    <div id="perm-modal" class="modal" hidden>
+      <div class="modal__box" role="dialog" aria-modal="true" aria-labelledby="perm-head">
+        <div id="perm-head" class="modal__head">Freigabe erforderlich</div>
+        <div class="modal__tool">Tool: <strong id="perm-tool"></strong></div>
+        <div id="perm-desc" class="modal__desc"></div>
+        <pre id="perm-preview" class="modal__preview"></pre>
+        <label class="modal__reason-label" for="perm-reason">
+          Begründung bei Ablehnung (optional – geht als Nachricht an Claude)
+        </label>
+        <textarea id="perm-reason" class="modal__reason" rows="2"></textarea>
+        <div class="modal__actions">
+          <button id="perm-allow" class="btn-allow" type="button">Erlauben</button>
+          <button id="perm-deny" class="btn-deny" type="button">Ablehnen</button>
+        </div>
+      </div>
+    </div>
   </main>
 
   <main class="layout layout--login" th:unless="${authenticated}">

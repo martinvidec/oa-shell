@@ -4,10 +4,49 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>oa-shell</title>
+  <link rel="stylesheet" th:href="@{/css/chat.css}" href="/css/chat.css"/>
 </head>
 <body>
-  <h1>oa-shell</h1>
-  <p>Chat-Oberfläche für lokal laufende Claude-Code-Sessions über Channels.</p>
-  <p><em>Scaffolding – Login, Chat, Datei-Browser und Freigabe-Dialog folgen.</em></p>
+  <header class="topbar">
+    <span class="brand">oa-shell</span>
+    <span class="spacer"></span>
+    <span id="ws-status" class="status status--off">getrennt</span>
+    <span th:if="${authenticated}" class="account">
+      <span th:text="${email}">user</span>
+      <form th:action="@{/logout}" method="post" class="inline">
+        <button type="submit" class="link">Logout</button>
+      </form>
+    </span>
+    <a th:unless="${authenticated}" class="btn" th:href="@{/oauth2/authorization/google}">Mit Google anmelden</a>
+  </header>
+
+  <main class="layout" th:if="${authenticated}">
+    <aside class="sidebar">
+      <div class="sidebar__head">
+        <span>Sessions</span>
+        <button id="refresh-sessions" class="link" title="Aktualisieren">↻</button>
+      </div>
+      <ul id="session-list" class="sessions"></ul>
+      <p id="no-sessions" class="hint" hidden>
+        Keine verbundene Session. Starte lokal <code>oa-shell login</code> und den Channel.
+      </p>
+    </aside>
+
+    <section class="chat">
+      <div id="chat-empty" class="chat__empty">Wähle links eine Session.</div>
+      <div id="messages" class="messages" hidden></div>
+      <div id="working" class="working" hidden>Claude arbeitet …</div>
+      <form id="chat-form" class="composer" hidden>
+        <input id="chat-input" type="text" autocomplete="off" placeholder="Nachricht an Claude …"/>
+        <button type="submit">Senden</button>
+      </form>
+    </section>
+  </main>
+
+  <main class="layout layout--login" th:unless="${authenticated}">
+    <p>Bitte melde dich an, um mit deinen Claude-Code-Sessions zu chatten.</p>
+  </main>
+
+  <script th:src="@{/js/chat.js}" src="/js/chat.js"></script>
 </body>
 </html>

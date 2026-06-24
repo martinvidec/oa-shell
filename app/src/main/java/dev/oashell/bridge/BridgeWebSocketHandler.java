@@ -3,6 +3,7 @@ package dev.oashell.bridge;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.oashell.chat.ChatService;
+import dev.oashell.files.FileViewService;
 import dev.oashell.persistence.ChannelSession;
 import dev.oashell.permission.PermissionService;
 import dev.oashell.persistence.ChannelSessionRepository;
@@ -35,14 +36,17 @@ public class BridgeWebSocketHandler extends TextWebSocketHandler {
     private final SessionRegistry registry;
     private final ChatService chatService;
     private final PermissionService permissionService;
+    private final FileViewService fileViewService;
 
     public BridgeWebSocketHandler(ObjectMapper mapper, ChannelSessionRepository sessions,
-            SessionRegistry registry, ChatService chatService, PermissionService permissionService) {
+            SessionRegistry registry, ChatService chatService, PermissionService permissionService,
+            FileViewService fileViewService) {
         this.mapper = mapper;
         this.sessions = sessions;
         this.registry = registry;
         this.chatService = chatService;
         this.permissionService = permissionService;
+        this.fileViewService = fileViewService;
     }
 
     @Override
@@ -67,9 +71,8 @@ public class BridgeWebSocketHandler extends TextWebSocketHandler {
             case "hello" -> onHello(ws, node);
             case "reply" -> onReply(ws, node);
             case "permission_request" -> onPermissionRequest(ws, node);
-            // TODO (#14): file_* -> Anfrager (FileViewService)
             case "file_tree_result", "file_content_result" ->
-                    log.debug("Envelope '{}' von conn={} (Routing folgt #14)", type, ws.getId());
+                    fileViewService.onResult(node.path("requestId").asText(), node);
             default -> log.debug("Unbekanntes Envelope '{}' von conn={}", type, ws.getId());
         }
     }

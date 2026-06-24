@@ -52,6 +52,7 @@
       ws.send(JSON.stringify({ type: 'selectSession', sessionId }));
     }
     input.focus();
+    loadFileTree();
   }
 
   async function loadSessions() {
@@ -93,6 +94,7 @@
       if (m.type === 'reply') {
         appendMessage('assistant', m.text);
         setWorking(false);
+        loadFileTree(); // Auto-Refresh nach Schreibaktionen (Soll)
       } else if (m.type === 'permission_request') {
         enqueuePermission(m);
       } else if (m.type === 'error') {
@@ -163,6 +165,88 @@
   });
 
   $('refresh-sessions').addEventListener('click', loadSessions);
+
+  // --- Datei-Browser (read-only) ---
+  const fileTreeEl = $('file-tree');
+  const fileModal = $('file-modal');
+
+  async function fetchJson(url) {
+    try {
+      const res = await fetch(url, { headers: { Accept: 'application/json' } });
+      if (!res.ok) return { error: 'HTTP ' + res.status };
+      return await res.json();
+    } catch (_) {
+      return { error: 'offline' };
+    }
+  }
+
+  function loadFileTree() {
+    if (!fileTreeEl) return;
+    fileTreeEl.innerHTML = '';
+    if (currentSessionId == null) return;
+    renderDir('.', fileTreeEl);
+  }
+
+  async function renderDir(dirPath, container) {
+    const data = await fetchJson(
+      '/api/sessions/' + currentSessionId + '/files?path=' + encodeURIComponent(dirPath),
+    );
+    if (!data || data.error || !Array.isArray(data.entries)) {
+      const note = document.createElement('div');
+      note.className = 'file-note';
+      note.textContent = '(' + ((data && data.error) || 'leer') + ')';
+      container.appendChild(note);
+      return;
+    }
+    const entries = data.entries.slice().sort((a, b) =>
+      a.type === b.type ? a.name.localeCompare(b.name) : a.type === 'dir' ? -1 : 1,
+    );
+    for (const e of entries) {
+      const childPath = dirPath === '.' ? e.name : dirPath + '/' + e.name;
+      const row = document.createElement('div');
+      row.className = 'file-row file-row--' + e.type;
+      if (e.type === 'dir') {
+        const box = document.createElement('div');
+        box.className = 'file-children';
+        box.hidden = true;
+        let loaded = false;
+        row.textContent = '▸ ' + e.name;
+        row.addEventListener('click', () => {
+          box.hidden = !box.hidden;
+          row.textContent = (box.hidden ? '▸ ' : '▾ ') + e.name;
+          if (!loaded && !box.hidden) {
+            loaded = true;
+            renderDir(childPath, box);
+          }
+        });
+        container.appendChild(row);
+        container.appendChild(box);
+      } else {
+        row.textContent = e.name;
+        row.addEventListener('click', () => viewFile(childPath));
+        container.appendChild(row);
+      }
+    }
+  }
+
+  async function viewFile(filePath) {
+    $('file-modal-path').textContent = filePath;
+    const pre = $('file-modal-content');
+    pre.textContent = 'lädt …';
+    fileModal.hidden = false;
+    const data = await fetchJson(
+      '/api/sessions/' + currentSessionId + '/file?path=' + encodeURIComponent(filePath),
+    );
+    if (!data || data.error) pre.textContent = 'Fehler: ' + ((data && data.error) || 'unbekannt');
+    else if (data.binary) pre.textContent = '(binäre Datei – ' + data.size + ' Bytes)';
+    else if (data.truncated) pre.textContent = '(Datei zu groß – ' + data.size + ' Bytes)';
+    else pre.textContent = data.content || '';
+  }
+
+  if (fileTreeEl) {
+    $('refresh-files').addEventListener('click', loadFileTree);
+    $('file-modal-close').addEventListener('click', () => { fileModal.hidden = true; });
+  }
 
   loadSessions();
   connect();

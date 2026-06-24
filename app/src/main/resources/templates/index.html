@@ -42,6 +42,24 @@
       </form>
     </section>
 
+    <aside class="files">
+      <div class="files__head">
+        <span>Dateien</span>
+        <button id="refresh-files" class="link" title="Aktualisieren">↻</button>
+      </div>
+      <div id="file-tree" class="file-tree"></div>
+    </aside>
+
+    <div id="file-modal" class="modal" hidden>
+      <div class="modal__box modal__box--file">
+        <div class="modal__head modal__head--file">
+          <span id="file-modal-path" class="file-modal__path"></span>
+          <button id="file-modal-close" class="link" title="Schließen">✕</button>
+        </div>
+        <pre id="file-modal-content" class="file-view"></pre>
+      </div>
+    </div>
+
     <div id="perm-modal" class="modal" hidden>
       <div class="modal__box" role="dialog" aria-modal="true" aria-labelledby="perm-head">
         <div id="perm-head" class="modal__head">Freigabe erforderlich</div>

@@ -2,6 +2,7 @@ package dev.oashell.bridge;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.oashell.chat.ChatService;
 import dev.oashell.persistence.ChannelSession;
 import dev.oashell.persistence.ChannelSessionRepository;
 import dev.oashell.persistence.SessionStatus;
@@ -31,12 +32,14 @@ public class BridgeWebSocketHandler extends TextWebSocketHandler {
     private final ObjectMapper mapper;
     private final ChannelSessionRepository sessions;
     private final SessionRegistry registry;
+    private final ChatService chatService;
 
     public BridgeWebSocketHandler(ObjectMapper mapper, ChannelSessionRepository sessions,
-            SessionRegistry registry) {
+            SessionRegistry registry, ChatService chatService) {
         this.mapper = mapper;
         this.sessions = sessions;
         this.registry = registry;
+        this.chatService = chatService;
     }
 
     @Override
@@ -59,11 +62,20 @@ public class BridgeWebSocketHandler extends TextWebSocketHandler {
         String type = node.path("type").asText("");
         switch (type) {
             case "hello" -> onHello(ws, node);
-            // TODO (#9/#11/#14): an Browser/Anfrager routen
-            case "reply", "permission_request", "file_tree_result", "file_content_result" ->
-                    log.debug("Envelope '{}' von conn={} (Routing folgt)", type, ws.getId());
+            case "reply" -> onReply(ws, node);
+            // TODO (#11/#14): permission_request -> Browser-Dialog, file_* -> Anfrager
+            case "permission_request", "file_tree_result", "file_content_result" ->
+                    log.debug("Envelope '{}' von conn={} (Routing folgt #11/#14)", type, ws.getId());
             default -> log.debug("Unbekanntes Envelope '{}' von conn={}", type, ws.getId());
         }
+    }
+
+    private void onReply(WebSocketSession ws, JsonNode node) {
+        SessionRegistry.Live live = registry.get(ws.getId());
+        if (live == null) {
+            return;
+        }
+        chatService.deliverReply(live.userId(), node.path("chat_id").asText(), node.path("text").asText(""));
     }
 
     private void onHello(WebSocketSession ws, JsonNode node) {

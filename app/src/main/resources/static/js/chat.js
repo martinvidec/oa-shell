@@ -93,11 +93,59 @@
       if (m.type === 'reply') {
         appendMessage('assistant', m.text);
         setWorking(false);
+      } else if (m.type === 'permission_request') {
+        appendPermission(m);
       } else if (m.type === 'error') {
         appendMessage('error', m.message || 'Fehler');
         setWorking(false);
       }
     };
+  }
+
+  // Minimaler Freigabe-Block (der polierte Dialog folgt in #12).
+  function appendPermission(req) {
+    const card = document.createElement('div');
+    card.className = 'msg msg--permission';
+    const title = document.createElement('div');
+    title.className = 'perm__title';
+    title.textContent = 'Claude möchte ' + (req.tool_name || 'ein Tool') + ' ausführen';
+    card.appendChild(title);
+    if (req.description) {
+      const d = document.createElement('div');
+      d.className = 'perm__desc';
+      d.textContent = req.description;
+      card.appendChild(d);
+    }
+    if (req.input_preview) {
+      const pre = document.createElement('pre');
+      pre.className = 'perm__preview';
+      pre.textContent = req.input_preview;
+      card.appendChild(pre);
+    }
+    const actions = document.createElement('div');
+    actions.className = 'perm__actions';
+    const decide = (behavior) => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'permissionVerdict', request_id: req.request_id, behavior }));
+      }
+      actions.remove();
+      const result = document.createElement('div');
+      result.className = 'perm__result';
+      result.textContent = behavior === 'allow' ? '✓ erlaubt' : '✗ abgelehnt';
+      card.appendChild(result);
+    };
+    const allow = document.createElement('button');
+    allow.textContent = 'Erlauben';
+    allow.addEventListener('click', () => decide('allow'));
+    const deny = document.createElement('button');
+    deny.className = 'btn-deny';
+    deny.textContent = 'Ablehnen';
+    deny.addEventListener('click', () => decide('deny'));
+    actions.appendChild(allow);
+    actions.appendChild(deny);
+    card.appendChild(actions);
+    messagesEl.appendChild(card);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
   form.addEventListener('submit', (e) => {

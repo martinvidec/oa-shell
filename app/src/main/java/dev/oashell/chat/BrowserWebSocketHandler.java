@@ -2,6 +2,7 @@ package dev.oashell.chat;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.oashell.permission.PermissionService;
 import dev.oashell.persistence.AppUser;
 import dev.oashell.persistence.AppUserRepository;
 import java.security.Principal;
@@ -28,13 +29,15 @@ public class BrowserWebSocketHandler extends TextWebSocketHandler {
     private final AppUserRepository users;
     private final ChatService chatService;
     private final BrowserHub browserHub;
+    private final PermissionService permissionService;
 
     public BrowserWebSocketHandler(ObjectMapper mapper, AppUserRepository users,
-            ChatService chatService, BrowserHub browserHub) {
+            ChatService chatService, BrowserHub browserHub, PermissionService permissionService) {
         this.mapper = mapper;
         this.users = users;
         this.chatService = chatService;
         this.browserHub = browserHub;
+        this.permissionService = permissionService;
     }
 
     @Override
@@ -64,6 +67,8 @@ public class BrowserWebSocketHandler extends TextWebSocketHandler {
         switch (type) {
             case "selectSession" -> browserHub.select(ws.getId(), node.path("sessionId").asLong());
             case "chat" -> handleChat(ws, userId, node);
+            case "permissionVerdict" -> permissionService.applyVerdict(
+                    userId, node.path("request_id").asText(), node.path("behavior").asText());
             default -> log.debug("Unbekanntes Browser-Envelope '{}'", type);
         }
     }

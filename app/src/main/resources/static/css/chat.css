@@ -76,6 +76,15 @@ body {
 .msg--assistant { align-self: flex-start; background: var(--assistant); }
 .msg--error { align-self: center; background: var(--error); color: #ffd7dd; font-size: 13px; }
 
+.msg--permission { align-self: stretch; max-width: none; background: #21262e; border: 1px solid var(--accent); }
+.perm__title { font-weight: 600; margin-bottom: 6px; }
+.perm__desc { color: var(--muted); margin-bottom: 6px; }
+.perm__preview { background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; margin: 0 0 8px; overflow-x: auto; font-size: 12px; }
+.perm__actions { display: flex; gap: 8px; }
+.perm__actions button { border: none; border-radius: 6px; padding: 6px 14px; font-weight: 600; cursor: pointer; background: var(--accent); color: #0b1320; }
+.perm__actions .btn-deny { background: #5b2330; color: #ffd7dd; }
+.perm__result { margin-top: 6px; color: var(--muted); font-size: 13px; }
+
 .working { padding: 4px 16px 8px; color: var(--muted); font-size: 13px; font-style: italic; }
 
 .composer { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); background: var(--panel); }

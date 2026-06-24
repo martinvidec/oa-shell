@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.oashell.chat.ChatService;
 import dev.oashell.persistence.ChannelSession;
+import dev.oashell.permission.PermissionService;
 import dev.oashell.persistence.ChannelSessionRepository;
 import dev.oashell.persistence.SessionStatus;
 import dev.oashell.session.SessionRegistry;
@@ -33,13 +34,15 @@ public class BridgeWebSocketHandler extends TextWebSocketHandler {
     private final ChannelSessionRepository sessions;
     private final SessionRegistry registry;
     private final ChatService chatService;
+    private final PermissionService permissionService;
 
     public BridgeWebSocketHandler(ObjectMapper mapper, ChannelSessionRepository sessions,
-            SessionRegistry registry, ChatService chatService) {
+            SessionRegistry registry, ChatService chatService, PermissionService permissionService) {
         this.mapper = mapper;
         this.sessions = sessions;
         this.registry = registry;
         this.chatService = chatService;
+        this.permissionService = permissionService;
     }
 
     @Override
@@ -63,11 +66,24 @@ public class BridgeWebSocketHandler extends TextWebSocketHandler {
         switch (type) {
             case "hello" -> onHello(ws, node);
             case "reply" -> onReply(ws, node);
-            // TODO (#11/#14): permission_request -> Browser-Dialog, file_* -> Anfrager
-            case "permission_request", "file_tree_result", "file_content_result" ->
-                    log.debug("Envelope '{}' von conn={} (Routing folgt #11/#14)", type, ws.getId());
+            case "permission_request" -> onPermissionRequest(ws, node);
+            // TODO (#14): file_* -> Anfrager (FileViewService)
+            case "file_tree_result", "file_content_result" ->
+                    log.debug("Envelope '{}' von conn={} (Routing folgt #14)", type, ws.getId());
             default -> log.debug("Unbekanntes Envelope '{}' von conn={}", type, ws.getId());
         }
+    }
+
+    private void onPermissionRequest(WebSocketSession ws, JsonNode node) {
+        SessionRegistry.Live live = registry.get(ws.getId());
+        if (live == null) {
+            return;
+        }
+        permissionService.relayRequest(live.userId(), live.dbSessionId(), ws.getId(),
+                node.path("request_id").asText(),
+                node.path("tool_name").asText(),
+                node.path("description").asText(""),
+                node.path("input_preview").asText(""));
     }
 
     private void onReply(WebSocketSession ws, JsonNode node) {

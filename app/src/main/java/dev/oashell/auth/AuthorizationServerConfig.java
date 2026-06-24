@@ -20,6 +20,8 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.InMemoryOAuth2AuthorizationConsentService;
+import org.springframework.security.oauth2.server.authorization.OAuth2AuthorizationConsentService;
 import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -43,11 +45,32 @@ public class AuthorizationServerConfig {
     /** Zu Google weiterleiten, wenn ein AS-Request (z. B. /oauth2/authorize) eine Anmeldung braucht. */
     private static final String LOGIN_REDIRECT = "/oauth2/authorization/google";
 
+    /** Eigene Consent-/Approval-Seite (Device-Grant und Authorization Code). */
+    private static final String CONSENT_PAGE_URI = "/oauth2/consent";
+
     @Bean
     @Order(1)
-    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http,
+            RegisteredClientRepository registeredClientRepository,
+            AuthorizationServerSettings authorizationServerSettings) throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+
+        // Public-Client-Authentifizierung (nur client_id) für den Device-Grant.
+        DeviceClientAuthenticationConverter deviceClientAuthenticationConverter =
+                new DeviceClientAuthenticationConverter(
+                        authorizationServerSettings.getDeviceAuthorizationEndpoint());
+        DeviceClientAuthenticationProvider deviceClientAuthenticationProvider =
+                new DeviceClientAuthenticationProvider(registeredClientRepository);
+
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
+                // Device Authorization Grant (RFC 8628): die ausgegebene verification_uri
+                // zeigt auf unsere /activate-Seite; die Approval läuft über die Consent-Seite.
+                .deviceAuthorizationEndpoint(device -> device.verificationUri("/activate"))
+                .deviceVerificationEndpoint(device -> device.consentPage(CONSENT_PAGE_URI))
+                .clientAuthentication(clientAuthentication -> clientAuthentication
+                        .authenticationConverter(deviceClientAuthenticationConverter)
+                        .authenticationProvider(deviceClientAuthenticationProvider))
+                .authorizationEndpoint(authorization -> authorization.consentPage(CONSENT_PAGE_URI))
                 .oidc(Customizer.withDefaults());
         http
                 .exceptionHandling(e -> e.defaultAuthenticationEntryPointFor(
@@ -84,10 +107,17 @@ public class AuthorizationServerConfig {
                 .scope("files")
                 .clientSettings(ClientSettings.builder()
                         .requireProofKey(true)
-                        .requireAuthorizationConsent(false)
+                        // Der Nutzer bestätigt das Gerät/die Scopes auf der Approval-Seite,
+                        // wodurch das Device an sein Konto gebunden wird.
+                        .requireAuthorizationConsent(true)
                         .build())
                 .build();
         return new InMemoryRegisteredClientRepository(channel);
+    }
+
+    @Bean
+    public OAuth2AuthorizationConsentService authorizationConsentService() {
+        return new InMemoryOAuth2AuthorizationConsentService();
     }
 
     @Bean

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>oa-shell – Zugriff bestätigen</title>
+  <script>
+    function cancelConsent() {
+      document.consent_form.reset();
+      document.consent_form.submit();
+    }
+  </script>
+</head>
+<body>
+  <h1>Zugriff bestätigen</h1>
+  <p>
+    Die Anwendung <strong th:text="${clientId}">client</strong> möchte auf dein Konto
+    <strong th:text="${principalName}">user</strong> zugreifen.
+  </p>
+  <p th:if="${userCode}">
+    Du hast den Code <strong th:text="${userCode}">CODE</strong> eingegeben.
+    Prüfe, ob er mit dem auf deinem Gerät angezeigten Code übereinstimmt.
+  </p>
+
+  <form name="consent_form" method="post" th:action="${requestURI}">
+    <input type="hidden" name="client_id" th:value="${clientId}"/>
+    <input type="hidden" name="state" th:value="${state}"/>
+    <input th:if="${userCode}" type="hidden" name="user_code" th:value="${userCode}"/>
+
+    <div th:each="scope : ${scopes}">
+      <input type="checkbox" name="scope" th:value="${scope.scope}" th:id="${scope.scope}"/>
+      <label th:for="${scope.scope}" th:text="${scope.scope}">scope</label>
+      <p th:text="${scope.description}">Beschreibung</p>
+    </div>
+
+    <div th:if="${not #lists.isEmpty(previouslyApprovedScopes)}">
+      <p>Bereits gewährte Berechtigungen:</p>
+      <div th:each="scope : ${previouslyApprovedScopes}">
+        <input type="checkbox" th:id="${scope.scope}" disabled checked/>
+        <label th:for="${scope.scope}" th:text="${scope.scope}">scope</label>
+      </div>
+    </div>
+
+    <button type="submit" id="submit-consent">Bestätigen</button>
+    <button type="button" id="cancel-consent" onclick="cancelConsent();">Abbrechen</button>
+  </form>
+</body>
+</html>

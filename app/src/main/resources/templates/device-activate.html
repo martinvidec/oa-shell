@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>oa-shell – Gerät aktivieren</title>
+</head>
+<body>
+  <h1>Gerät aktivieren</h1>
+  <p>Gib den Aktivierungs-Code ein, der auf deinem Gerät angezeigt wird.</p>
+  <form th:action="@{/oauth2/device_verification}" method="post">
+    <label for="user_code">Aktivierungs-Code</label>
+    <input type="text" id="user_code" name="user_code" required autofocus/>
+    <button type="submit">Weiter</button>
+  </form>
+</body>
+</html>

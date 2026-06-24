@@ -7,10 +7,16 @@ import path from 'node:path';
 import { loadConfig } from './config.js';
 import { loadCredentials } from './credentials.js';
 import { BridgeClient } from './bridge-client.js';
+import { createFileServer } from './file-serving.js';
 import { CHANNEL_NOTIFICATION, PERMISSION_REQUEST, PERMISSION_VERDICT } from './protocol.js';
 
 const VERSION = '0.0.1';
 const CWD = process.cwd();
+const fileServer = createFileServer(CWD);
+
+function errorOf(e: unknown): string {
+  return e instanceof Error ? e.message : 'error';
+}
 const log = (msg: string): void => void process.stderr.write(`[oashell-channel] ${msg}\n`);
 
 /**
@@ -103,11 +109,21 @@ async function main(): Promise<void> {
           params: { request_id: msg.request_id, behavior: msg.behavior },
         });
       } else if (msg.type === 'file_tree') {
-        // TODO (#13): File-Serving (Baum unter cwd, Pfad-Sandbox)
-        bridge?.send({ type: 'file_tree_result', requestId: msg.requestId, error: 'not_implemented' });
+        let result: Record<string, unknown>;
+        try {
+          result = { entries: fileServer.tree(msg.path) };
+        } catch (e) {
+          result = { error: errorOf(e) };
+        }
+        bridge?.send({ type: 'file_tree_result', requestId: msg.requestId, ...result });
       } else if (msg.type === 'file_content') {
-        // TODO (#13): File-Serving (Inhalt unter cwd, Pfad-Sandbox)
-        bridge?.send({ type: 'file_content_result', requestId: msg.requestId, error: 'not_implemented' });
+        let result: Record<string, unknown>;
+        try {
+          result = { ...fileServer.content(msg.path) };
+        } catch (e) {
+          result = { error: errorOf(e) };
+        }
+        bridge?.send({ type: 'file_content_result', requestId: msg.requestId, ...result });
       }
     },
   });

@@ -25,5 +25,5 @@ export type ChannelToApp =
       description: string;
       input_preview: string;
     }
-  | { type: 'file_tree_result'; requestId: string; entries?: unknown; error?: string }
+  | { type: 'file_tree_result'; requestId: string; [key: string]: unknown }
   | { type: 'file_content_result'; requestId: string; [key: string]: unknown };

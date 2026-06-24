@@ -19,6 +19,7 @@
 
   let ws = null;
   let currentSessionId = null;
+  const sessionMessages = {}; // sessionId -> [{ role, text }] (Kontext-Isolierung je Session)
 
   function setStatus(connected) {
     wsStatus.textContent = connected ? 'verbunden' : 'getrennt';
@@ -30,7 +31,7 @@
     working.hidden = !on;
   }
 
-  function appendMessage(role, text) {
+  function renderMessage(role, text) {
     const el = document.createElement('div');
     el.className = 'msg msg--' + role;
     el.textContent = text;
@@ -38,9 +39,22 @@
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }
 
+  function appendMessage(role, text) {
+    if (currentSessionId != null) {
+      (sessionMessages[currentSessionId] || (sessionMessages[currentSessionId] = [])).push({ role, text });
+    }
+    renderMessage(role, text);
+  }
+
   function showSession(sessionId) {
     currentSessionId = sessionId;
+    // Freigabe-Prompts der vorherigen Session verwerfen (Kontext-Isolierung).
+    permQueue.length = 0;
+    activePerm = null;
+    if (permModal) permModal.hidden = true;
+    // Nachrichtenpuffer dieser Session rendern.
     messagesEl.innerHTML = '';
+    (sessionMessages[sessionId] || []).forEach((m) => renderMessage(m.role, m.text));
     chatEmpty.hidden = true;
     messagesEl.hidden = false;
     form.hidden = false;
@@ -69,12 +83,59 @@
       const li = document.createElement('li');
       li.dataset.id = s.id;
       li.className = 'session' + (s.status === 'CONNECTED' ? '' : ' session--off');
-      li.innerHTML =
-        '<span class="session__name"></span><span class="session__dot" title="' + s.status + '"></span>';
-      li.querySelector('.session__name').textContent = s.name;
+
+      const name = document.createElement('span');
+      name.className = 'session__name';
+      name.textContent = s.name;
+
+      const edit = document.createElement('button');
+      edit.className = 'session__edit link';
+      edit.type = 'button';
+      edit.title = 'Umbenennen';
+      edit.textContent = '✎';
+      edit.addEventListener('click', (ev) => { ev.stopPropagation(); startRename(li, s); });
+
+      const dot = document.createElement('span');
+      dot.className = 'session__dot';
+      dot.title = s.status;
+
+      li.appendChild(name);
+      li.appendChild(edit);
+      li.appendChild(dot);
       li.addEventListener('click', () => showSession(s.id));
+      if (String(s.id) === String(currentSessionId)) li.classList.add('active');
       sessionList.appendChild(li);
     }
+  }
+
+  function startRename(li, s) {
+    const nameEl = li.querySelector('.session__name');
+    if (!nameEl) return;
+    const input = document.createElement('input');
+    input.className = 'session__rename';
+    input.value = s.name;
+    nameEl.replaceWith(input);
+    input.focus();
+    input.select();
+    let done = false;
+    const finish = (save) => {
+      if (done) return;
+      done = true;
+      const newName = save ? (input.value.trim() || s.name) : s.name;
+      if (save && newName !== s.name && ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'renameSession', sessionId: s.id, name: newName }));
+      }
+      s.name = newName;
+      const span = document.createElement('span');
+      span.className = 'session__name';
+      span.textContent = newName;
+      input.replaceWith(span);
+    };
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); finish(true); }
+      else if (e.key === 'Escape') { e.preventDefault(); finish(false); }
+    });
+    input.addEventListener('blur', () => finish(true));
   }
 
   function connect() {

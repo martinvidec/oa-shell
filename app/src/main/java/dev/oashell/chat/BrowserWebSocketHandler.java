@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.oashell.permission.PermissionService;
 import dev.oashell.persistence.AppUser;
 import dev.oashell.persistence.AppUserRepository;
+import dev.oashell.session.SessionService;
 import java.security.Principal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,14 +31,17 @@ public class BrowserWebSocketHandler extends TextWebSocketHandler {
     private final ChatService chatService;
     private final BrowserHub browserHub;
     private final PermissionService permissionService;
+    private final SessionService sessionService;
 
     public BrowserWebSocketHandler(ObjectMapper mapper, AppUserRepository users,
-            ChatService chatService, BrowserHub browserHub, PermissionService permissionService) {
+            ChatService chatService, BrowserHub browserHub, PermissionService permissionService,
+            SessionService sessionService) {
         this.mapper = mapper;
         this.users = users;
         this.chatService = chatService;
         this.browserHub = browserHub;
         this.permissionService = permissionService;
+        this.sessionService = sessionService;
     }
 
     @Override
@@ -69,6 +73,7 @@ public class BrowserWebSocketHandler extends TextWebSocketHandler {
             case "chat" -> handleChat(ws, userId, node);
             case "permissionVerdict" -> permissionService.applyVerdict(
                     userId, node.path("request_id").asText(), node.path("behavior").asText());
+            case "renameSession" -> handleRename(userId, node);
             default -> log.debug("Unbekanntes Browser-Envelope '{}'", type);
         }
     }
@@ -80,6 +85,14 @@ public class BrowserWebSocketHandler extends TextWebSocketHandler {
             chatService.sendUserMessage(userId, sessionId, text);
         } catch (AccessDeniedException | IllegalArgumentException ex) {
             ws.sendMessage(new TextMessage("{\"type\":\"error\",\"message\":\"" + ex.getMessage() + "\"}"));
+        }
+    }
+
+    private void handleRename(Long userId, JsonNode node) {
+        try {
+            sessionService.rename(userId, node.path("sessionId").asLong(), node.path("name").asText());
+        } catch (Exception ex) {
+            log.debug("Umbenennen fehlgeschlagen: {}", ex.getMessage());
         }
     }
 

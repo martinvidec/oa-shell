@@ -2,6 +2,31 @@ spring:
   application:
     name: oa-shell
 
+  datasource:
+    url: jdbc:h2:mem:oashell;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+  security:
+    oauth2:
+      client:
+        registration:
+          # Identitäts-Provider (Default Google). Client-ID/Secret kommen aus der
+          # Umgebung; die Dummy-Defaults halten Build/CI ohne echte Secrets lauffähig.
+          # Echte Werte z. B. via Env (GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET) oder
+          # application-local.yml (gitignored).
+          google:
+            client-id: ${GOOGLE_CLIENT_ID:dummy-client-id}
+            client-secret: ${GOOGLE_CLIENT_SECRET:dummy-client-secret}
+            scope:
+              - openid
+              - email
+              - profile
+
 server:
   port: 8080
 

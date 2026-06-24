@@ -1,0 +1,33 @@
+{
+  "name": "oa-shell-channel",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "oa-shell Channel-Server + Device-Grant-Login-CLI für lokale Claude-Code-Sessions",
+  "bin": {
+    "oa-shell": "dist/login.js",
+    "oa-shell-channel": "dist/server.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist",
+    "login": "node dist/login.js",
+    "start": "node dist/server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "ws": "^8.18.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@types/ws": "^8.5.13",
+    "typescript": "^5.6.3"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

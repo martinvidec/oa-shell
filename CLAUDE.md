@@ -4,17 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > Sprache: Der Nutzer arbeitet auf **Deutsch** – Antworten standardmäßig auf Deutsch.
 
-## Projektstatus: Design-Phase (noch kein Code)
+## Projektstatus: frühe Implementierung
 
-Dieses Repo enthält **noch keinen Anwendungscode** – nur die Spezifikationsdokumente
-unter `docs/` und diese Datei. Implementierung hat noch nicht begonnen.
+Spezifikation fertig (`docs/01`–`05`); **Spike (#1) erledigt → GO**; **Scaffolding
+(#2 App, #3 Channel) steht**. Jetzt folgen die Feature-Issues.
 
 - **Quelle der Wahrheit ist `docs/`** – vor jeder Umsetzung lesen. Maßgeblich:
   `docs/04-spezifikation-claude-chat.md` (technisches Design), davor
-  `01-konzept`, `02-ist-analyse`, `03-anforderungsanalyse`.
-- **Arbeitsplan = 17 GitHub-Issues** in Implementierungsreihenfolge. **Issue #1
-  (Spike) zuerst**: Channels-Freischaltung + End-to-End-Durchstich validieren, bevor
-  Features gebaut werden. Übersicht: `gh issue list`, Detail: `gh issue view <n>`.
+  `01-konzept`, `02-ist-analyse`, `03-anforderungsanalyse`; Spike-Ergebnis: `05-spike-report`.
+- **Arbeitsplan = GitHub-Issues** in Implementierungsreihenfolge. Übersicht:
+  `gh issue list`, Detail: `gh issue view <n>`.
+- **Repo-Layout:** `app/` (Spring Boot), `channel/` (Node-Paket), `spike/`
+  (validierter Durchstich, Referenz/Wegwerf), `docs/`.
 
 ## Worum es geht (Big Picture)
 
@@ -60,12 +61,12 @@ Serverseitiges Session-Hosting wurde bewusst verworfen – nicht wieder einführ
 
 ## Befehle
 
-- **Es gibt noch nichts zu bauen/testen.** Sobald das Scaffolding (Issues #2/#3) steht:
-  App über **Maven** (`mvn verify` etc.), Channel über **npm**. Bis dahin existieren
-  keine Build-/Test-Befehle.
-- **JDK 21 ist via Homebrew verfügbar** (`openjdk@21`). Falls die Standard-`java`
-  älter ist, für den Build darauf zeigen, z. B.
-  `JAVA_HOME="$(brew --prefix openjdk@21)" mvn verify` (oder `openjdk@21/bin` in den PATH).
+- **App (Spring Boot):** `cd app && JAVA_HOME="$(brew --prefix openjdk@21)" mvn -ntp verify`
+  (Build + Tests). Einzelner Test: `… mvn -ntp -Dtest=OaShellApplicationTests test`.
+  Lokal starten: `… mvn spring-boot:run` (Port 8080).
+- **Channel (Node):** `cd channel && npm ci && npm run build` (tsc → `dist/`).
+- **JDK 21 ist via Homebrew vorhanden** (`openjdk@21`); die Standard-`java` ist 11,
+  daher `JAVA_HOME` setzen (siehe oben). Spike-Tests: `cd spike && npm run test:bridge`.
 - **Channel starten (Nutzer-Seite, gemäß Spec):** einmal `oa-shell login`, dann
   `claude --dangerously-load-development-channels server:oa-shell` im Zielverzeichnis.
   (Eigene Channels sind in der Preview nicht allowlisted → Development-Flag nötig.)

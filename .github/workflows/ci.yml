@@ -35,5 +35,5 @@ jobs:
           cache: npm
           cache-dependency-path: channel/package-lock.json
       - run: npm ci
-      - name: Build (tsc)
-        run: npm run build
+      - name: Build & test
+        run: npm test

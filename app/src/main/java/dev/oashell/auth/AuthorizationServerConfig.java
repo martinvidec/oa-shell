@@ -86,8 +86,9 @@ public class AuthorizationServerConfig {
             AppUserOidcUserService oidcUserService) throws Exception {
         http
                 .authorizeHttpRequests(a -> a
+                        // /bridge wird per Bearer-Token im Handshake authentifiziert (s. BridgeTokenHandshakeInterceptor).
                         .requestMatchers("/", "/error", "/healthz", "/actuator/health",
-                                "/css/**", "/js/**", "/favicon.ico").permitAll()
+                                "/bridge", "/css/**", "/js/**", "/favicon.ico").permitAll()
                         .anyRequest().authenticated())
                 .oauth2Login(o -> o.userInfoEndpoint(u -> u.oidcUserService(oidcUserService)));
         return http.build();

@@ -29,6 +29,10 @@ spring:
 
 server:
   port: 8080
+  # Hinter einem TLS-terminierenden Proxy: Original-Schema/Host aus Forwarded-Headern
+  # übernehmen (damit Redirects/WS-URLs korrekt https/wss sind). TLS selbst terminiert
+  # der Proxy (siehe docs/06-haertung-claude-chat.md).
+  forward-headers-strategy: framework
 
 management:
   endpoints:

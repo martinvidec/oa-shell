@@ -40,6 +40,19 @@ public class BrowserHub {
         }
     }
 
+    /** Sendet Text an alle Browser-Verbindungen des Nutzers (z. B. Status-Updates). */
+    public void sendToUser(Long userId, String text) {
+        for (BrowserConn conn : byConnId.values()) {
+            if (conn.userId().equals(userId) && conn.ws().isOpen()) {
+                try {
+                    conn.ws().sendMessage(new TextMessage(text));
+                } catch (IOException ex) {
+                    log.debug("Browser-Send fehlgeschlagen conn={}: {}", conn.ws().getId(), ex.getMessage());
+                }
+            }
+        }
+    }
+
     /** Sendet Text an alle Verbindungen des Nutzers, die {@code sessionId} gewählt haben. */
     public void sendToUserSession(Long userId, Long sessionId, String text) {
         for (BrowserConn conn : byConnId.values()) {

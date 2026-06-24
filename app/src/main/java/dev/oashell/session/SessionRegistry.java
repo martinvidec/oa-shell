@@ -17,8 +17,8 @@ import org.springframework.web.socket.WebSocketSession;
 @Component
 public class SessionRegistry {
 
-    /** Eine aktive Verbindung: WS + Nutzer + zugehörige persistente Session-ID. */
-    public record Live(WebSocketSession ws, Long userId, Long dbSessionId) {
+    /** Eine aktive Verbindung: WS + Nutzer + persistente Session-ID + Token-{@code jti}. */
+    public record Live(WebSocketSession ws, Long userId, Long dbSessionId, String jti) {
     }
 
     private final Map<String, Live> byConnectionId = new ConcurrentHashMap<>();

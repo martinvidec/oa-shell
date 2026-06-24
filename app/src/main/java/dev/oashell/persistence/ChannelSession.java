@@ -38,6 +38,10 @@ public class ChannelSession {
     @Column(name = "connection_id", nullable = false)
     private String connectionId;
 
+    /** JWT-{@code jti} des Verbindungs-Tokens (für Revoke). */
+    @Column(name = "jti")
+    private String jti;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
@@ -90,6 +94,14 @@ public class ChannelSession {
 
     public String getConnectionId() {
         return connectionId;
+    }
+
+    public String getJti() {
+        return jti;
+    }
+
+    public void setJti(String jti) {
+        this.jti = jti;
     }
 
     public Instant getCreatedAt() {

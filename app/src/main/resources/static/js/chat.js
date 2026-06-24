@@ -95,12 +95,20 @@
       edit.textContent = '✎';
       edit.addEventListener('click', (ev) => { ev.stopPropagation(); startRename(li, s); });
 
+      const disc = document.createElement('button');
+      disc.className = 'session__disconnect link';
+      disc.type = 'button';
+      disc.title = 'Trennen & Token widerrufen';
+      disc.textContent = '⏏';
+      disc.addEventListener('click', (ev) => { ev.stopPropagation(); disconnectSession(s.id); });
+
       const dot = document.createElement('span');
       dot.className = 'session__dot';
       dot.title = s.status;
 
       li.appendChild(name);
       li.appendChild(edit);
+      li.appendChild(disc);
       li.appendChild(dot);
       li.addEventListener('click', () => showSession(s.id));
       if (String(s.id) === String(currentSessionId)) li.classList.add('active');
@@ -138,6 +146,13 @@
     input.addEventListener('blur', () => finish(true));
   }
 
+  function disconnectSession(sessionId) {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'disconnectSession', sessionId }));
+    }
+    setTimeout(loadSessions, 300);
+  }
+
   function connect() {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
     ws = new WebSocket(proto + '://' + location.host + '/ws');
@@ -161,6 +176,8 @@
       } else if (m.type === 'error') {
         appendMessage('error', m.message || 'Fehler');
         setWorking(false);
+      } else if (m.type === 'sessionStatus') {
+        loadSessions(); // Live-Update (z. B. Session-Ende erkannt)
       }
     };
   }

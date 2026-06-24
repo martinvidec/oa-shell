@@ -1,5 +1,6 @@
 package dev.oashell.bridge;
 
+import dev.oashell.auth.RevokedTokenStore;
 import dev.oashell.persistence.AppUser;
 import dev.oashell.persistence.AppUserRepository;
 import java.util.Map;
@@ -23,13 +24,17 @@ import org.springframework.web.socket.server.HandshakeInterceptor;
 public class BridgeTokenHandshakeInterceptor implements HandshakeInterceptor {
 
     public static final String ATTR_USER_ID = "appUserId";
+    public static final String ATTR_JTI = "jti";
 
     private final JwtDecoder jwtDecoder;
     private final AppUserRepository users;
+    private final RevokedTokenStore revokedTokens;
 
-    public BridgeTokenHandshakeInterceptor(JwtDecoder jwtDecoder, AppUserRepository users) {
+    public BridgeTokenHandshakeInterceptor(JwtDecoder jwtDecoder, AppUserRepository users,
+            RevokedTokenStore revokedTokens) {
         this.jwtDecoder = jwtDecoder;
         this.users = users;
+        this.revokedTokens = revokedTokens;
     }
 
     @Override
@@ -50,6 +55,11 @@ public class BridgeTokenHandshakeInterceptor implements HandshakeInterceptor {
             return false;
         }
 
+        if (revokedTokens.isRevoked(jwt.getId())) {
+            response.setStatusCode(HttpStatus.UNAUTHORIZED);
+            return false;
+        }
+
         Optional<AppUser> user = users.findByGoogleSub(jwt.getSubject());
         if (user.isEmpty()) {
             response.setStatusCode(HttpStatus.UNAUTHORIZED);
@@ -57,6 +67,7 @@ public class BridgeTokenHandshakeInterceptor implements HandshakeInterceptor {
         }
 
         attributes.put(ATTR_USER_ID, user.get().getId());
+        attributes.put(ATTR_JTI, jwt.getId());
         return true;
     }
 

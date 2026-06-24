@@ -74,6 +74,7 @@ public class BrowserWebSocketHandler extends TextWebSocketHandler {
             case "permissionVerdict" -> permissionService.applyVerdict(
                     userId, node.path("request_id").asText(), node.path("behavior").asText());
             case "renameSession" -> handleRename(userId, node);
+            case "disconnectSession" -> handleDisconnect(userId, node);
             default -> log.debug("Unbekanntes Browser-Envelope '{}'", type);
         }
     }
@@ -93,6 +94,14 @@ public class BrowserWebSocketHandler extends TextWebSocketHandler {
             sessionService.rename(userId, node.path("sessionId").asLong(), node.path("name").asText());
         } catch (Exception ex) {
             log.debug("Umbenennen fehlgeschlagen: {}", ex.getMessage());
+        }
+    }
+
+    private void handleDisconnect(Long userId, JsonNode node) {
+        try {
+            sessionService.disconnect(userId, node.path("sessionId").asLong());
+        } catch (Exception ex) {
+            log.debug("Trennen fehlgeschlagen: {}", ex.getMessage());
         }
     }
 

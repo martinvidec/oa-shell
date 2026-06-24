@@ -63,8 +63,9 @@ body {
 .session.active { outline: 1px solid var(--accent); }
 .session--off { opacity: .55; }
 .session__name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.session__edit { opacity: 0; font-size: 12px; }
-.session:hover .session__edit { opacity: .85; }
+.session__edit, .session__disconnect { opacity: 0; font-size: 12px; }
+.session:hover .session__edit, .session:hover .session__disconnect { opacity: .85; }
+.session__disconnect { color: #f0a0ab; }
 .session__rename { flex: 1; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--accent); border-radius: 4px; padding: 2px 6px; font: inherit; }
 .session__dot { width: 8px; height: 8px; border-radius: 50%; background: #7ee2a4; flex: none; }
 .session--off .session__dot { background: #f0a0ab; }

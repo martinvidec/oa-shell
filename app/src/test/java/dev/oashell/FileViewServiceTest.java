@@ -40,7 +40,7 @@ class FileViewServiceTest {
     void treeCorrelatesChannelResult() throws Exception {
         when(sessions.findById(10L)).thenReturn(Optional.of(new ChannelSession(1L, "conn-1")));
         when(registry.get("conn-1"))
-                .thenReturn(new SessionRegistry.Live(mock(WebSocketSession.class), 1L, 10L));
+                .thenReturn(new SessionRegistry.Live(mock(WebSocketSession.class), 1L, 10L, "jti-1"));
 
         // Channel "antwortet" synchron auf die gesendete Anfrage.
         doAnswer(inv -> {

@@ -2,6 +2,7 @@ package dev.oashell.bridge;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import dev.oashell.chat.BrowserHub;
 import dev.oashell.chat.ChatService;
 import dev.oashell.files.FileViewService;
 import dev.oashell.persistence.ChannelSession;
@@ -37,23 +38,28 @@ public class BridgeWebSocketHandler extends TextWebSocketHandler {
     private final ChatService chatService;
     private final PermissionService permissionService;
     private final FileViewService fileViewService;
+    private final BrowserHub browserHub;
 
     public BridgeWebSocketHandler(ObjectMapper mapper, ChannelSessionRepository sessions,
             SessionRegistry registry, ChatService chatService, PermissionService permissionService,
-            FileViewService fileViewService) {
+            FileViewService fileViewService, BrowserHub browserHub) {
         this.mapper = mapper;
         this.sessions = sessions;
         this.registry = registry;
         this.chatService = chatService;
         this.permissionService = permissionService;
         this.fileViewService = fileViewService;
+        this.browserHub = browserHub;
     }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession ws) {
         Long userId = (Long) ws.getAttributes().get(BridgeTokenHandshakeInterceptor.ATTR_USER_ID);
-        ChannelSession session = sessions.save(new ChannelSession(userId, ws.getId()));
-        registry.register(new SessionRegistry.Live(ws, userId, session.getId()));
+        String jti = (String) ws.getAttributes().get(BridgeTokenHandshakeInterceptor.ATTR_JTI);
+        ChannelSession entity = new ChannelSession(userId, ws.getId());
+        entity.setJti(jti);
+        ChannelSession session = sessions.save(entity);
+        registry.register(new SessionRegistry.Live(ws, userId, session.getId(), jti));
         log.info("Bridge verbunden: user={} session={} conn={}", userId, session.getId(), ws.getId());
     }
 
@@ -121,6 +127,9 @@ public class BridgeWebSocketHandler extends TextWebSocketHandler {
                 session.setLastSeenAt(Instant.now());
                 sessions.save(session);
             });
+            // Browser live über das Session-Ende informieren (Session-Ende wird erkannt).
+            browserHub.sendToUser(live.userId(),
+                    "{\"type\":\"sessionStatus\",\"sessionId\":" + live.dbSessionId() + ",\"status\":\"DISCONNECTED\"}");
             log.info("Bridge getrennt: session={} conn={} status={}", live.dbSessionId(), ws.getId(), status);
         }
     }

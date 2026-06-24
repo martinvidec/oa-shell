@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.nimbusds.jose.jwk.source.JWKSource;
+import dev.oashell.auth.RevokedTokenStore;
 import com.nimbusds.jose.proc.SecurityContext;
 import dev.oashell.persistence.AppUser;
 import dev.oashell.persistence.AppUserRepository;
@@ -40,13 +41,20 @@ class BridgeWebSocketTest {
     private AppUserRepository users;
     @Autowired
     private ChannelSessionRepository sessions;
+    @Autowired
+    private RevokedTokenStore revokedTokens;
 
     private final HttpClient http = HttpClient.newHttpClient();
 
     private String mintToken(String sub) {
+        return mintToken(sub, "jti-" + sub);
+    }
+
+    private String mintToken(String sub, String jti) {
         JwtEncoder encoder = new NimbusJwtEncoder(jwkSource);
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
+                .id(jti)
                 .subject(sub)
                 .issuer("oa-shell")
                 .issuedAt(now)
@@ -109,5 +117,19 @@ class BridgeWebSocketTest {
         ChannelSession closed = await(() -> sessions.findById(session.getId())
                 .filter(s -> s.getStatus() == SessionStatus.DISCONNECTED));
         assertThat(closed.getStatus()).isEqualTo(SessionStatus.DISCONNECTED);
+    }
+
+    @Test
+    void rejectsRevokedToken() throws Exception {
+        users.save(new AppUser("sub-revoke-1", "revoke@example.com", "Revoke Test"));
+        String token = mintToken("sub-revoke-1", "jti-revoke-1");
+
+        WebSocket ws = connect(token); // erste Verbindung ok
+        ws.sendClose(WebSocket.NORMAL_CLOSURE, "bye").get(5, TimeUnit.SECONDS);
+
+        revokedTokens.revoke("jti-revoke-1");
+
+        // Reconnect mit widerrufenem Token wird am Handshake abgelehnt.
+        assertThatThrownBy(() -> connect(token)).isInstanceOf(Exception.class);
     }
 }

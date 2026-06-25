@@ -1,0 +1,12 @@
+{
+  "name": "oa-shell",
+  "owner": { "name": "Martin Videc" },
+  "description": "Marketplace fuer das oa-shell Channel-Plugin.",
+  "plugins": [
+    {
+      "name": "oa-shell",
+      "source": "./plugin",
+      "description": "Web-Chat-Oberflaeche fuer lokale Claude-Code-Sessions ueber den oa-shell Channel."
+    }
+  ]
+}

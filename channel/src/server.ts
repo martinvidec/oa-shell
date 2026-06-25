@@ -25,8 +25,10 @@ const log = (msg: string): void => void process.stderr.write(`[oashell-channel] 
  * vermittelt Chat (Push), reply-Tool und Permission-Relay. File-Serving folgt in #13.
  */
 async function main(): Promise<void> {
-  const cfg = loadConfig();
-  const creds = loadCredentials(cfg.credentialsPath);
+  // credentialsPath hängt nicht von der App-URL ab; zuerst Token laden, dann die
+  // Config final auflösen (App-URL aus dem Login als Fallback, falls kein Env gesetzt).
+  const creds = loadCredentials(loadConfig().credentialsPath);
+  const cfg = loadConfig(creds?.appUrl);
 
   const mcp = new Server(
     { name: 'oashell', version: VERSION },

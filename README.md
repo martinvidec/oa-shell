@@ -122,6 +122,45 @@ parallel sind möglich; jede hat ihren eigenen Chat-/Datei-Kontext.
 
 ---
 
+## Lokaler Durchlauf ohne Google (Profil `e2e`)
+
+Zum schnellen lokalen Ausprobieren — und als Basis der E2E-Tests — gibt es ein
+**Dev-Profil `e2e`**, das Google-Login und Device-Grant durch zwei einfache Endpunkte
+ersetzt. So lässt sich der echte Pfad (echte `claude`-Session + echter Channel + App)
+ohne Google durchspielen. **Nur lokal** — siehe Warnung unten.
+
+App mit dem Profil starten:
+
+```bash
+cd app
+JAVA_HOME="$(brew --prefix openjdk@21)" \
+  java -jar target/oa-shell-app-0.0.1-SNAPSHOT.jar --spring.profiles.active=e2e
+```
+
+**Browser ohne Google anmelden:** `http://localhost:8080/e2e/login?user=demo` öffnen
+(setzt die Session-Cookie), dann auf `/` gehen.
+
+**Channel ohne Device-Grant verbinden** — Token holen und als Credentials ablegen
+(gleicher `user` wie beim Login, damit Browser und Channel demselben Konto gehören):
+
+```bash
+TOKEN=$(curl -s "http://localhost:8080/e2e/token?user=demo")
+printf '{"appUrl":"http://localhost:8080","accessToken":"%s","tokenType":"Bearer","obtainedAt":0}' \
+  "$TOKEN" > /tmp/oashell-e2e.json
+```
+
+Dann in der `.mcp.json` (aus Schritt 2) `OASHELL_CREDENTIALS` auf `/tmp/oashell-e2e.json`
+zeigen lassen und `claude --dangerously-load-development-channels server:oashell` starten.
+Die Session erscheint im Browser; Chat, Freigaben und Datei-Browser funktionieren wie im
+echten Betrieb.
+
+> ⚠️ **Nur für lokale Tests.** Unter Profil `e2e` kann sich jeder, der die App erreicht,
+> als beliebiger Nutzer anmelden bzw. ein Channel-Token minten
+> (`E2eLoginController` / `E2eTokenController`). Das Profil **niemals in Produktion**
+> aktivieren.
+
+---
+
 ## Build & Test
 
 ```bash

@@ -34,7 +34,16 @@
   function renderMessage(role, text) {
     const el = document.createElement('div');
     el.className = 'msg msg--' + role;
-    el.textContent = text;
+    // Nur Claude-Antworten als Markdown rendern; eigene Eingaben, System- und
+    // Fehlermeldungen bleiben Plaintext (textContent). Siehe docs/…-chat-rendering.
+    if (role === 'assistant' && typeof renderMarkdownInto === 'function') {
+      const body = document.createElement('div');
+      body.className = 'markdown-body';
+      renderMarkdownInto(body, text);
+      el.appendChild(body);
+    } else {
+      el.textContent = text;
+    }
     messagesEl.appendChild(el);
     messagesEl.scrollTop = messagesEl.scrollHeight;
   }

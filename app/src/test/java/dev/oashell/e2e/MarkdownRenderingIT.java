@@ -47,6 +47,7 @@ class MarkdownRenderingIT extends PlaywrightSpringBase {
             String md = "# Titel\n\n"
                     + "- eins\n- zwei\n\n"
                     + "Inline `code` und ein [Beispiel](https://example.com).\n\n"
+                    + "```java\npublic class A { int x = 1; }\n```\n\n"
                     + "<img src=x onerror=window.__xss=1>\n\n"
                     + "<script>window.__xss=2</script>\n\n"
                     + "[klick](javascript:window.__xss=3)";
@@ -58,6 +59,10 @@ class MarkdownRenderingIT extends PlaywrightSpringBase {
             assertThat(page.locator(".markdown-body code").first()).hasText("code");
             assertThat(page.locator(".markdown-body a[href^='https://example.com']"))
                     .hasAttribute("target", "_blank");
+
+            // Syntax-Hervorhebung (#26): Code-Block erhält die hljs-Klasse und Token-Spans.
+            assertThat(page.locator(".markdown-body pre code.hljs")).isVisible();
+            assertThat(page.locator(".markdown-body pre .hljs-keyword").first()).isVisible();
 
             // XSS neutralisiert: kein img-Node, kein Script/Handler ausgeführt.
             assertEquals(0, page.locator(".markdown-body img").count(), "img muss entfernt sein");

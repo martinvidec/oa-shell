@@ -4,6 +4,7 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>oa-shell</title>
+  <link rel="stylesheet" th:href="@{/css/vendor/hljs-theme.css}" href="/css/vendor/hljs-theme.css"/>
   <link rel="stylesheet" th:href="@{/css/chat.css}" href="/css/chat.css"/>
 </head>
 <body>
@@ -82,9 +83,10 @@
     <p>Bitte melde dich an, um mit deinen Claude-Code-Sessions zu chatten.</p>
   </main>
 
-  <!-- Markdown-Rendering (vendored, kein CDN): marked -> DOMPurify -> markdown.js -->
+  <!-- Markdown-Rendering (vendored, kein CDN): marked + DOMPurify + highlight.js -> markdown.js -->
   <script th:src="@{/js/vendor/marked.min.js}" src="/js/vendor/marked.min.js"></script>
   <script th:src="@{/js/vendor/purify.min.js}" src="/js/vendor/purify.min.js"></script>
+  <script th:src="@{/js/vendor/highlight.min.js}" src="/js/vendor/highlight.min.js"></script>
   <script th:src="@{/js/markdown.js}" src="/js/markdown.js"></script>
   <script th:src="@{/js/chat.js}" src="/js/chat.js"></script>
 </body>

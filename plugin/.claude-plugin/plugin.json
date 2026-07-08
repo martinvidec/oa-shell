@@ -1,0 +1,30 @@
+{
+  "name": "oa-shell",
+  "displayName": "oa-shell Channel",
+  "version": "0.1.0",
+  "description": "Web-Chat-Oberflaeche fuer lokale Claude-Code-Sessions ueber den oa-shell Channel.",
+  "author": { "name": "Martin Videc" },
+  "homepage": "https://github.com/martinvidec/oa-shell",
+  "repository": "https://github.com/martinvidec/oa-shell",
+  "keywords": ["chat", "channel", "claude-code", "oa-shell"],
+  "userConfig": {
+    "app_url": {
+      "type": "string",
+      "title": "oa-shell App-URL",
+      "description": "Basis-URL der laufenden oa-shell-Web-App, z. B. http://localhost:8090",
+      "default": "http://localhost:8080"
+    }
+  },
+  "mcpServers": {
+    "oashell": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/server/server.cjs"],
+      "env": {
+        "OASHELL_APP_URL": "${user_config.app_url}"
+      }
+    }
+  },
+  "channels": [
+    { "server": "oashell" }
+  ]
+}

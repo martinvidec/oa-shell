@@ -62,31 +62,58 @@ falls 8080 belegt ist). Öffne die Seite und melde dich mit **„Mit Google anme
 
 ## 2. Channel einrichten (deine Maschine)
 
-### Bauen
+Empfohlen ist die Installation als **Claude-Code-Plugin** (analog zum Telegram-Plugin):
+kein manuelles `.mcp.json`, keine `node`-Befehle. Der manuelle Weg bleibt als Variante B.
+
+### Variante A – Plugin (empfohlen)
+
+**1. Installieren** (in einer beliebigen `claude`-Session):
+
+```text
+/plugin marketplace add martinvidec/oa-shell
+/plugin install oa-shell@oa-shell
+```
+
+Beim Aktivieren fragt Claude Code die **App-URL** ab (`app_url`, Default
+`http://localhost:8080`) — auf deine laufende App setzen, z. B. `http://localhost:8090`.
+
+> Aus einem lokalen Checkout statt von GitHub:
+> `/plugin marketplace add /ABS/PFAD/zu/oa-shell`.
+
+**2. Anmelden** (Device Grant) per mitgeliefertem Slash-Command — öffnet den Browser,
+speichert das kontogebundene Token unter `~/.oa-shell/credentials.json` (Rechte `0600`):
+
+```text
+/oa-shell:login                          # nutzt die konfigurierte App-URL
+/oa-shell:login http://localhost:8090    # oder URL explizit übergeben
+```
+
+**3. Channel an eine Session hängen** — im gewünschten Arbeitsverzeichnis starten:
+
+```bash
+claude --dangerously-load-development-channels plugin:oa-shell@oa-shell
+```
+
+Beim ersten Start einmalig den **Ordner-Trust-Dialog** im Terminal bestätigen.
+
+> Der Development-Flag bleibt nötig: eigene Channels sind in der Research-Preview nicht auf
+> Anthropics Allowlist (nur die offiziellen Plugins wie Telegram sind es). Bequem per Alias:
+> `alias claude-oa='claude --dangerously-load-development-channels plugin:oa-shell@oa-shell'`.
+> Nach Channel-Code-Änderungen das Bundle neu bauen: `cd channel && npm ci && npm run bundle`.
+
+### Variante B – manuell (ohne Plugin)
 
 ```bash
 cd channel
 npm ci
 npm run build
 npm link            # optional: macht `oa-shell` und `oa-shell-channel` global verfügbar
-```
 
-### Anmelden (Device Grant)
-
-Die App-URL setzen (Default ist `http://127.0.0.1:8080`), dann einloggen:
-
-```bash
 export OASHELL_APP_URL="http://localhost:8080"   # bzw. deine Server-URL
 oa-shell login        # ohne npm link: node dist/login.js
 ```
 
-`oa-shell login` zeigt eine URL + einen Code. Im Browser (wo du angemeldet bist)
-bestätigen → das kontogebundene Token wird unter `~/.oa-shell/credentials.json` (Rechte
-`0600`) gespeichert. Es ist zugleich die Authentifizierung deiner Session.
-
-### Channel an eine Claude-Session hängen
-
-In dem **Verzeichnis**, in dem Claude arbeiten soll, eine `.mcp.json` anlegen:
+In dem **Verzeichnis**, in dem Claude arbeiten soll, eine `.mcp.json` anlegen …
 
 ```json
 {
@@ -101,14 +128,11 @@ In dem **Verzeichnis**, in dem Claude arbeiten soll, eine `.mcp.json` anlegen:
 
 > Ohne `npm link`: `"command": "node", "args": ["/ABS/PFAD/oa-shell/channel/dist/server.js"]`.
 
-Dann Claude mit angehängtem Channel starten (im selben Verzeichnis):
+… und Claude mit angehängtem Channel starten (im selben Verzeichnis):
 
 ```bash
 claude --dangerously-load-development-channels server:oashell
 ```
-
-Beim ersten Start einmalig den **Ordner-Trust-Dialog** im Terminal bestätigen. (Eigene
-Channels sind in der Preview nicht auf der Allowlist – daher das Development-Flag.)
 
 ---
 

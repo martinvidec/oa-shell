@@ -11,8 +11,13 @@ export interface OaShellConfig {
   credentialsPath: string;
 }
 
-export function loadConfig(): OaShellConfig {
-  const appUrl = process.env.OASHELL_APP_URL ?? 'http://127.0.0.1:8080';
+/**
+ * Lädt die Konfiguration aus der Umgebung. Präzedenz der App-URL:
+ * `OASHELL_APP_URL` (z. B. aus der Plugin-`userConfig`) > `fallbackAppUrl`
+ * (z. B. die beim Login gespeicherte `appUrl`) > Default `http://127.0.0.1:8080`.
+ */
+export function loadConfig(fallbackAppUrl?: string): OaShellConfig {
+  const appUrl = process.env.OASHELL_APP_URL ?? fallbackAppUrl ?? 'http://127.0.0.1:8080';
   const wsUrl = process.env.OASHELL_WS_URL ?? appUrl.replace(/^http/i, 'ws') + '/bridge';
   const credentialsPath =
     process.env.OASHELL_CREDENTIALS ?? path.join(os.homedir(), '.oa-shell', 'credentials.json');

@@ -82,6 +82,10 @@
     <p>Bitte melde dich an, um mit deinen Claude-Code-Sessions zu chatten.</p>
   </main>
 
+  <!-- Markdown-Rendering (vendored, kein CDN): marked -> DOMPurify -> markdown.js -->
+  <script th:src="@{/js/vendor/marked.min.js}" src="/js/vendor/marked.min.js"></script>
+  <script th:src="@{/js/vendor/purify.min.js}" src="/js/vendor/purify.min.js"></script>
+  <script th:src="@{/js/markdown.js}" src="/js/markdown.js"></script>
   <script th:src="@{/js/chat.js}" src="/js/chat.js"></script>
 </body>
 </html>

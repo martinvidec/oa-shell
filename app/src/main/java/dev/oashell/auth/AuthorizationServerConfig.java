@@ -28,7 +28,9 @@ import org.springframework.security.oauth2.server.authorization.client.Registere
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import java.time.Duration;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
+import org.springframework.security.oauth2.server.authorization.settings.TokenSettings;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
@@ -112,6 +114,14 @@ public class AuthorizationServerConfig {
                         // Der Nutzer bestätigt das Gerät/die Scopes auf der Approval-Seite,
                         // wodurch das Device an sein Konto gebunden wird.
                         .requireAuthorizationConsent(true)
+                        .build())
+                // Das Access-Token IST die Bridge-/Session-Auth (Modell A) und muss so lange
+                // leben wie eine Arbeits-Session – der Default von 5 min ließe die Bridge nach
+                // kurzer Zeit nicht mehr reconnecten. Widerruf beim Trennen bleibt möglich
+                // (RevokedTokenStore); ein erneutes `oa-shell login` stellt ein frisches Token aus.
+                .tokenSettings(TokenSettings.builder()
+                        .accessTokenTimeToLive(Duration.ofHours(12))
+                        .refreshTokenTimeToLive(Duration.ofDays(30))
                         .build())
                 .build();
         return new InMemoryRegisteredClientRepository(channel);

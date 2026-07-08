@@ -58,6 +58,19 @@
     }
     var html = marked.parse(src);
     el.innerHTML = DOMPurify.sanitize(html, SANITIZE_CONFIG);
+    // Syntax-Hervorhebung NACH dem Sanitizen: hljs arbeitet auf dem bereits als Text
+    // eingefügten (sicheren) Code-Inhalt und ersetzt ihn durch escapte hljs-Spans
+    // (Sprache aus der `language-*`-Klasse; sonst Auto/keine). Kein neuer XSS-Vektor.
+    if (global.hljs && el.querySelectorAll) {
+      var blocks = el.querySelectorAll('pre code');
+      for (var i = 0; i < blocks.length; i++) {
+        try {
+          global.hljs.highlightElement(blocks[i]);
+        } catch (e) {
+          /* ignorieren — Code bleibt unhervorgehoben, aber lesbar */
+        }
+      }
+    }
   }
 
   global.renderMarkdownInto = renderMarkdownInto;
